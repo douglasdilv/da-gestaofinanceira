@@ -47,7 +47,6 @@ export interface Income {
   observation: string | null
   mode: AppMode
   is_ifood: boolean
-  ifood_transfer_number: string | null
   created_at: string
   updated_at: string
   attachments?: Attachment[]
