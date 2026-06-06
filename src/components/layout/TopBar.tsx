@@ -61,18 +61,24 @@ export function TopBar() {
           </div>
 
           {/* Company Selector (Business Mode) */}
-          {mode === 'business' && companies && companies.length > 0 && (
+          {mode === 'business' && (
             <div className="hidden sm:flex items-center gap-2 bg-surface-container-low rounded-lg px-2 py-1.5 border border-outline-variant">
               <Building2 className="w-4 h-4 text-primary" />
-              <select
-                value={activeCompanyId || ''}
-                onChange={(e) => setActiveCompanyId(e.target.value)}
-                className="bg-transparent text-label-md font-label-md text-on-surface focus:outline-none cursor-pointer"
-              >
-                {companies.map(c => (
-                  <option key={c.id} value={c.id} className="bg-surface text-on-surface">{c.name}</option>
-                ))}
-              </select>
+              {companies && companies.length > 0 ? (
+                <select
+                  value={activeCompanyId || ''}
+                  onChange={(e) => setActiveCompanyId(e.target.value)}
+                  className="bg-transparent text-label-md font-label-md text-on-surface focus:outline-none cursor-pointer"
+                >
+                  {companies.map(c => (
+                    <option key={c.id} value={c.id} className="bg-surface text-on-surface">{c.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <Link to="/perfil" className="text-label-md font-label-md text-primary hover:underline px-2">
+                  Adicionar Empresa
+                </Link>
+              )}
             </div>
           )}
 

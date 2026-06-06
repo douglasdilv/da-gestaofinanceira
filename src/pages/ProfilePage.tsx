@@ -39,16 +39,7 @@ export default function ProfilePage() {
     navigate('/login')
   }
 
-  const toggleCompany = async () => {
-    if (!user || !profile) return
-    const newValue = !profile.has_company
-    await upsertMutation.mutateAsync({ id: user.id, has_company: newValue })
-    if (newValue && (!companies || companies.length === 0)) {
-      navigate('/onboarding')
-    } else if (!newValue) {
-      toast.info('Modo empresarial desativado')
-    }
-  }
+
 
   const handleCreateCompany = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -132,30 +123,10 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Company toggle */}
-      <button
-        onClick={toggleCompany}
-        className="w-full flex items-center justify-between p-md bg-surface-container-lowest border border-outline-variant rounded-xl hover:border-primary transition-all"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-secondary-container flex items-center justify-center">
-            <Building2 className="w-5 h-5 text-on-secondary-container" />
-          </div>
-          <div className="text-left">
-            <p className="font-semibold text-on-surface">Possui empresa?</p>
-            <p className="text-body-sm text-on-surface-variant">
-              {profile?.has_company ? 'Ativo - Gerenciando dados empresariais' : 'Ative para gerenciar dados empresariais'}
-            </p>
-          </div>
-        </div>
-        <div className={`w-12 h-7 rounded-full relative transition-all duration-300 ${profile?.has_company ? 'bg-primary' : 'bg-surface-container-highest'}`}>
-          <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-all duration-300 ${profile?.has_company ? 'left-6' : 'left-0.5'}`} />
-        </div>
-      </button>
+
 
       {/* List of Companies */}
-      {profile?.has_company && (
-        <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden animate-fade-in">
+      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden animate-fade-in">
           <div className="flex items-center justify-between px-lg py-md border-b border-outline-variant">
             <h4 className="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">Minhas Empresas</h4>
             <Dialog.Root open={isCompanyModalOpen} onOpenChange={setIsCompanyModalOpen}>
@@ -213,10 +184,7 @@ export default function ProfilePage() {
               ))
             )}
           </div>
-        </div>
-      )}
-
-      {/* Export */}
+      </div>
       <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
         <h4 className="px-lg py-md text-label-md font-label-md text-on-surface-variant uppercase tracking-wider border-b border-outline-variant">Exportar dados</h4>
         <div className="divide-y divide-outline-variant">
