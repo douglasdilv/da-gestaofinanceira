@@ -200,8 +200,9 @@ export default function ExpensesPage() {
       setSelectedPhoto(null)
       setPhotoPreview(null)
       reset()
-    } catch {
-      toast.error('Erro ao salvar despesa')
+    } catch (error: any) {
+      console.error(error)
+      toast.error('Erro ao salvar: ' + (error?.message || 'Desconhecido'))
     }
   }
 
