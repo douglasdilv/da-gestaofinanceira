@@ -10,7 +10,6 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { Plus, X, Search, Trash2, Edit2, Paperclip, ExternalLink, Image as ImageIcon, FileText } from 'lucide-react'
-import { ModeToggle } from '@/components/shared/ModeToggle'
 import type { Expense } from '@/types'
 
 const schema = z.object({
@@ -274,7 +273,6 @@ export default function ExpensesPage() {
 
   return (
     <div className="py-lg space-y-lg">
-      <ModeToggle />
       <input ref={fileInputRef} type="file" className="hidden" onChange={handleAttachFile} accept="image/*,application/pdf" capture="environment" />
 
       {/* Header */}

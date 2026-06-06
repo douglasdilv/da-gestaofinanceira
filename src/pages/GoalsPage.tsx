@@ -9,7 +9,6 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { Plus, X, Trash2, Edit2 } from 'lucide-react'
-import { ModeToggle } from '@/components/shared/ModeToggle'
 import { GoalCard } from '@/components/dashboard/GoalCard'
 import type { Goal } from '@/types'
 
@@ -96,7 +95,6 @@ export default function GoalsPage() {
 
   return (
     <div className="py-lg space-y-lg">
-      <ModeToggle />
 
       <div className="flex items-center justify-between">
         <div>

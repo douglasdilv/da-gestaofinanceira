@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useAnnualReport } from '@/hooks/useReports'
 import { useAppStore } from '@/store/appStore'
-import { formatCurrency, getMonthName, calculateROI } from '@/lib/utils'
-import { ModeToggle } from '@/components/shared/ModeToggle'
+import { formatCurrency, getMonthName } from '@/lib/utils'
 import { ChevronLeft, ChevronRight, Download, FileSpreadsheet, TrendingUp, TrendingDown } from 'lucide-react'
 import { exportToPDF } from '@/lib/exportPDF'
 import { exportToExcel } from '@/lib/exportExcel'
@@ -38,7 +37,6 @@ export default function ReportsPage() {
 
   return (
     <div className="py-lg space-y-lg">
-      <ModeToggle />
 
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3">

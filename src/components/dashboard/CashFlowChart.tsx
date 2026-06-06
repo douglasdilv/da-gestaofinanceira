@@ -9,12 +9,13 @@ import { formatCurrency } from '@/lib/utils'
 interface Props {
   userId: string
   mode: AppMode
+  companyId: string | null
   currentDate: Date
 }
 
-export function CashFlowChart({ userId, mode, currentDate }: Props) {
+export function CashFlowChart({ userId, mode, companyId, currentDate }: Props) {
   const { data } = useQuery({
-    queryKey: ['cashflow-chart', userId, mode, format(currentDate, 'yyyy-MM')],
+    queryKey: ['cashflow-chart', userId, mode, companyId, format(currentDate, 'yyyy-MM')],
     queryFn: async () => {
       const months = Array.from({ length: 6 }, (_, i) => subMonths(currentDate, 5 - i))
       const results = await Promise.all(
@@ -22,10 +23,23 @@ export function CashFlowChart({ userId, mode, currentDate }: Props) {
           const start = format(new Date(d.getFullYear(), d.getMonth(), 1), 'yyyy-MM-dd')
           const end = format(new Date(d.getFullYear(), d.getMonth() + 1, 0), 'yyyy-MM-dd')
 
-          const [inc, exp] = await Promise.all([
-            supabase.from('incomes').select('value').eq('user_id', userId).eq('mode', mode).gte('date', start).lte('date', end),
-            supabase.from('expenses').select('value').eq('user_id', userId).eq('mode', mode).gte('date', start).lte('date', end),
-          ])
+          let incQuery = supabase.from('incomes').select('value').eq('user_id', userId).eq('mode', mode).gte('date', start).lte('date', end)
+          let expQuery = supabase.from('expenses').select('value').eq('user_id', userId).eq('mode', mode).gte('date', start).lte('date', end)
+
+          if (mode === 'business') {
+            if (companyId) {
+              incQuery = incQuery.eq('company_id', companyId)
+              expQuery = expQuery.eq('company_id', companyId)
+            } else {
+              incQuery = incQuery.is('company_id', null)
+              expQuery = expQuery.is('company_id', null)
+            }
+          } else {
+            incQuery = incQuery.is('company_id', null)
+            expQuery = expQuery.is('company_id', null)
+          }
+
+          const [inc, exp] = await Promise.all([incQuery, expQuery])
 
           return {
             month: format(d, 'MMM', { locale: ptBR }).toUpperCase(),

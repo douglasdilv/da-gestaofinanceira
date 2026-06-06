@@ -9,7 +9,6 @@ import { CashFlowChart } from '@/components/dashboard/CashFlowChart'
 import { CategoryPieChart } from '@/components/dashboard/CategoryPieChart'
 import { GoalCard } from '@/components/dashboard/GoalCard'
 import { RecentActivity } from '@/components/dashboard/RecentActivity'
-import { ModeToggle } from '@/components/shared/ModeToggle'
 import { Link } from 'react-router-dom'
 import { useAnnualReport } from '@/hooks/useReports'
 
@@ -60,8 +59,6 @@ export default function DashboardPage() {
 
   return (
     <div className="py-lg space-y-lg">
-      {/* Mode toggle - mobile */}
-      <ModeToggle />
 
       {/* Alerts */}
       {alerts.length > 0 && (
@@ -93,7 +90,7 @@ export default function DashboardPage() {
 
       {/* Charts grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
-        <CashFlowChart userId={user?.id || ''} mode={mode} currentDate={currentDate} />
+        <CashFlowChart userId={user?.id || ''} mode={mode} companyId={activeCompanyId} currentDate={currentDate} />
         {pieData.length > 0 && <CategoryPieChart data={pieData} />}
       </div>
 
