@@ -20,6 +20,8 @@ const schema = z.object({
   category_id: z.string().optional().or(z.literal('')),
   description: z.string().optional(),
   observation: z.string().optional(),
+  is_installment: z.boolean().default(false),
+  installments: z.coerce.number().min(2, 'Mínimo de 2 parcelas').optional().or(z.literal('')),
 })
 
 type FormData = z.infer<typeof schema>
@@ -99,20 +101,22 @@ export default function ExpensesPage() {
   })
   const { data: categories = [] } = useCategories(user?.id, 'expense', mode)
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { date: new Date().toISOString().split('T')[0] },
+    defaultValues: { date: new Date().toISOString().split('T')[0], is_installment: false },
   })
+
+  const isInstallment = watch('is_installment')
 
   const openForm = (item?: Expense) => {
     setSelectedPhoto(null)
     setPhotoPreview(null)
     if (item) {
       setEditItem(item)
-      reset({ name: item.name, value: item.value, date: item.date, category_id: item.category_id || '', description: item.description || '', observation: item.observation || '' })
+      reset({ name: item.name, value: item.value, date: item.date, category_id: item.category_id || '', description: item.description || '', observation: item.observation || '', is_installment: false, installments: '' })
     } else {
       setEditItem(null)
-      reset({ date: new Date().toISOString().split('T')[0] })
+      reset({ date: new Date().toISOString().split('T')[0], is_installment: false, installments: '' })
     }
     setShowForm(true)
   }
@@ -133,14 +137,46 @@ export default function ExpensesPage() {
         expenseId = editItem.id
         toast.success('Despesa atualizada!')
       } else {
-        const created = await createMutation.mutateAsync({
-          ...data, user_id: user.id, mode, company_id: null,
-          category_id: data.category_id || null,
-          description: data.description || null,
-          observation: data.observation || null,
-        })
-        expenseId = created.id
-        toast.success('Despesa adicionada!')
+        if (data.is_installment && data.installments && Number(data.installments) > 1) {
+          const qty = Number(data.installments)
+          const [yearStr, monthStr, dayStr] = data.date.split('-')
+          const year = parseInt(yearStr, 10)
+          const month = parseInt(monthStr, 10)
+          const day = parseInt(dayStr, 10)
+
+          toast.loading(`Criando ${qty} parcelas...`)
+          let firstExpenseId = ''
+          
+          for (let i = 0; i < qty; i++) {
+            const nextMonth = month + i
+            const nextYear = year + Math.floor((nextMonth - 1) / 12)
+            const normalizedMonth = ((nextMonth - 1) % 12) + 1
+            const formattedDate = `${nextYear}-${String(normalizedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+
+            const created = await createMutation.mutateAsync({
+              ...data,
+              name: `${data.name} (${i + 1}/${qty})`,
+              date: formattedDate,
+              user_id: user.id, mode, company_id: null,
+              category_id: data.category_id || null,
+              description: data.description || null,
+              observation: data.observation || null,
+            })
+            if (i === 0) firstExpenseId = created.id
+          }
+          toast.dismiss()
+          expenseId = firstExpenseId
+          toast.success('Despesas parceladas adicionadas!')
+        } else {
+          const created = await createMutation.mutateAsync({
+            ...data, user_id: user.id, mode, company_id: null,
+            category_id: data.category_id || null,
+            description: data.description || null,
+            observation: data.observation || null,
+          })
+          expenseId = created.id
+          toast.success('Despesa adicionada!')
+        }
       }
 
       // If a photo/file was selected in the form, compress if image and upload it
@@ -358,6 +394,29 @@ export default function ExpensesPage() {
                   {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
+
+              {!editItem && (
+                <>
+                  <div className="flex items-center justify-between p-3 bg-surface-container-low rounded-xl">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-lg text-primary">calendar_month</span>
+                      <span className="text-body-sm font-semibold">Compra Parcelada?</span>
+                    </div>
+                    <button type="button" onClick={() => setValue('is_installment', !isInstallment)}
+                      className={`w-11 h-6 rounded-full transition-all relative ${isInstallment ? 'bg-primary' : 'bg-surface-container-highest'}`}>
+                      <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${isInstallment ? 'left-5' : 'left-0.5'}`} />
+                    </button>
+                  </div>
+                  {isInstallment && (
+                    <div className="space-y-xs">
+                      <label className="text-label-md font-label-md text-on-surface-variant">Número de Parcelas *</label>
+                      <input {...register('installments')} type="number" min="2" placeholder="Ex: 12" className="w-full bg-transparent border-b border-outline-variant py-sm text-body-lg focus:outline-none focus:border-primary transition-colors" />
+                      {errors.installments && <p className="text-xs text-error">{errors.installments.message}</p>}
+                    </div>
+                  )}
+                </>
+              )}
+
               <div className="space-y-xs">
                 <label className="text-label-md font-label-md text-on-surface-variant">Descrição</label>
                 <input {...register('description')} placeholder="Detalhes da despesa" className="w-full bg-transparent border-b border-outline-variant py-sm text-body-lg focus:outline-none focus:border-primary transition-colors" />

@@ -20,7 +20,6 @@ const schema = z.object({
   category_id: z.string().optional().or(z.literal('')),
   observation: z.string().optional(),
   is_ifood: z.boolean().default(false),
-  ifood_transfer_number: z.string().optional(),
 })
 
 type FormData = z.infer<typeof schema>
@@ -119,7 +118,6 @@ export default function IncomesPage() {
         category_id: item.category_id || '',
         observation: item.observation || '',
         is_ifood: item.is_ifood,
-        ifood_transfer_number: item.ifood_transfer_number || '',
       })
     } else {
       setEditItem(null)
@@ -144,7 +142,7 @@ export default function IncomesPage() {
         incomeId = editItem.id
         toast.success('Receita atualizada!')
       } else {
-        const created = await createMutation.mutateAsync({ ...data, user_id: user.id, mode, company_id: null, category_id: data.category_id || null, observation: data.observation || null, is_ifood: data.is_ifood, ifood_transfer_number: data.ifood_transfer_number || null })
+        const created = await createMutation.mutateAsync({ ...data, user_id: user.id, mode, company_id: null, category_id: data.category_id || null, observation: data.observation || null, is_ifood: data.is_ifood })
         incomeId = created.id
         toast.success('Receita adicionada!')
       }
@@ -280,9 +278,6 @@ export default function IncomesPage() {
                   <div className="min-w-0">
                     <p className="font-semibold text-body-lg text-on-surface truncate">{item.name}</p>
                     <p className="text-body-sm text-on-surface-variant">{catName} · {formatDate(item.date)}</p>
-                    {item.is_ifood && item.ifood_transfer_number && (
-                      <p className="text-[11px] text-on-surface-variant">Repasse #{item.ifood_transfer_number}</p>
-                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-2">
@@ -368,12 +363,6 @@ export default function IncomesPage() {
                     <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${isIfood ? 'left-5' : 'left-0.5'}`} />
                   </button>
                 </div>
-                {isIfood && (
-                  <div className="col-span-2 space-y-xs">
-                    <label className="text-label-md font-label-md text-on-surface-variant">Número do Repasse</label>
-                    <input {...register('ifood_transfer_number')} placeholder="Ex: 123456" className="w-full bg-transparent border-b border-outline-variant py-sm text-body-lg focus:outline-none focus:border-primary transition-colors" />
-                  </div>
-                )}
                 <div className="col-span-2 space-y-xs">
                   <label className="text-label-md font-label-md text-on-surface-variant">Observação</label>
                   <textarea {...register('observation')} rows={2} placeholder="Opcional..." className="w-full bg-transparent border border-outline-variant rounded-lg p-sm text-body-lg focus:outline-none focus:border-primary transition-colors resize-none" />
