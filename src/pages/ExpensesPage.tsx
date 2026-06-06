@@ -132,8 +132,10 @@ export default function ExpensesPage() {
     if (!user) return
     try {
       let expenseId = ''
+      const { is_installment, installments, ...expenseData } = data
+      
       if (editItem) {
-        await updateMutation.mutateAsync({ id: editItem.id, ...data, mode })
+        await updateMutation.mutateAsync({ id: editItem.id, ...expenseData, mode })
         expenseId = editItem.id
         toast.success('Despesa atualizada!')
       } else {
@@ -154,13 +156,13 @@ export default function ExpensesPage() {
             const formattedDate = `${nextYear}-${String(normalizedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 
             const created = await createMutation.mutateAsync({
-              ...data,
-              name: `${data.name} (${i + 1}/${qty})`,
+              ...expenseData,
+              name: `${expenseData.name} (${i + 1}/${qty})`,
               date: formattedDate,
               user_id: user.id, mode, company_id: null,
-              category_id: data.category_id || null,
-              description: data.description || null,
-              observation: data.observation || null,
+              category_id: expenseData.category_id || null,
+              description: expenseData.description || null,
+              observation: expenseData.observation || null,
             })
             if (i === 0) firstExpenseId = created.id
           }
@@ -169,10 +171,10 @@ export default function ExpensesPage() {
           toast.success('Despesas parceladas adicionadas!')
         } else {
           const created = await createMutation.mutateAsync({
-            ...data, user_id: user.id, mode, company_id: null,
-            category_id: data.category_id || null,
-            description: data.description || null,
-            observation: data.observation || null,
+            ...expenseData, user_id: user.id, mode, company_id: null,
+            category_id: expenseData.category_id || null,
+            description: expenseData.description || null,
+            observation: expenseData.observation || null,
           })
           expenseId = created.id
           toast.success('Despesa adicionada!')

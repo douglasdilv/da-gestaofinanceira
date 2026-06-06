@@ -142,8 +142,10 @@ export default function IncomesPage() {
     if (!user) return
     try {
       let incomeId = ''
+      const { is_recurring, recurring_months, ...incomeData } = data
+      
       if (editItem) {
-        await updateMutation.mutateAsync({ id: editItem.id, ...data, user_id: user.id, mode })
+        await updateMutation.mutateAsync({ id: editItem.id, ...incomeData, user_id: user.id, mode })
         incomeId = editItem.id
         toast.success('Receita atualizada!')
       } else {
@@ -164,12 +166,12 @@ export default function IncomesPage() {
             const formattedDate = `${nextYear}-${String(normalizedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 
             const created = await createMutation.mutateAsync({
-              ...data,
+              ...incomeData,
               date: formattedDate,
               user_id: user.id, mode, company_id: null,
-              category_id: data.category_id || null,
-              observation: data.observation || null,
-              is_ifood: data.is_ifood
+              category_id: incomeData.category_id || null,
+              observation: incomeData.observation || null,
+              is_ifood: incomeData.is_ifood
             })
             if (i === 0) firstIncomeId = created.id
           }
@@ -177,7 +179,7 @@ export default function IncomesPage() {
           incomeId = firstIncomeId
           toast.success('Receitas recorrentes adicionadas com sucesso!')
         } else {
-          const created = await createMutation.mutateAsync({ ...data, user_id: user.id, mode, company_id: null, category_id: data.category_id || null, observation: data.observation || null, is_ifood: data.is_ifood })
+          const created = await createMutation.mutateAsync({ ...incomeData, user_id: user.id, mode, company_id: null, category_id: incomeData.category_id || null, observation: incomeData.observation || null, is_ifood: incomeData.is_ifood })
           incomeId = created.id
           toast.success('Receita adicionada!')
         }
