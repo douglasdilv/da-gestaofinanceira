@@ -75,8 +75,32 @@ export function useAnnualReport(userId: string | undefined, year: number, mode: 
         }
       })
 
-      const totalIncome = months.reduce((s, m) => s + m.totalIncome, 0)
-      const totalExpenses = months.reduce((s, m) => s + m.totalExpenses, 0)
+      const currentDate = new Date()
+      const currentYear = currentDate.getFullYear()
+      const currentMonth = currentDate.getMonth() + 1
+      
+      const isPastYear = year < currentYear
+      const isCurrentYear = year === currentYear
+
+      let totalIncome = 0
+      let totalExpenses = 0
+      let futureIncome = 0
+      let futureExpenses = 0
+
+      months.forEach(m => {
+        if (isPastYear || (isCurrentYear && m.month <= currentMonth)) {
+          totalIncome += m.totalIncome
+          totalExpenses += m.totalExpenses
+        } else if (isCurrentYear && m.month > currentMonth) {
+          futureIncome += m.totalIncome
+          futureExpenses += m.totalExpenses
+        } else {
+          // Future years
+          futureIncome += m.totalIncome
+          futureExpenses += m.totalExpenses
+        }
+      })
+
       const netProfit = totalIncome - totalExpenses
       const roi = calculateROI(totalIncome, totalExpenses)
 
@@ -87,6 +111,8 @@ export function useAnnualReport(userId: string | undefined, year: number, mode: 
         year,
         totalIncome,
         totalExpenses,
+        futureExpenses,
+        futureIncome,
         netProfit,
         roi,
         bestMonth,

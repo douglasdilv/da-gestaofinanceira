@@ -160,6 +160,8 @@ export interface AnnualSummary {
   year: number
   totalIncome: number
   totalExpenses: number
+  futureExpenses: number
+  futureIncome: number
   netProfit: number
   roi: number
   bestMonth: number

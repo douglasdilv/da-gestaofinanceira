@@ -80,14 +80,15 @@ export default function ReportsPage() {
           {/* Annual summary cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-gutter">
             {[
-              { label: 'Receita Total', value: formatCurrency(report.totalIncome), color: 'text-tertiary', bg: 'bg-tertiary/5 border-tertiary/20' },
-              { label: 'Despesa Total', value: formatCurrency(report.totalExpenses), color: 'text-error', bg: 'bg-error/5 border-error/20' },
-              { label: 'Lucro Líquido', value: formatCurrency(report.netProfit), color: report.netProfit >= 0 ? 'text-primary' : 'text-error', bg: 'bg-primary/5 border-primary/20' },
-              { label: 'ROI do Ano', value: `${report.roi.toFixed(1)}%`, color: 'text-primary', bg: 'bg-primary-container text-on-primary-container' },
+              { label: 'Receita Total (Atual)', value: formatCurrency(report.totalIncome), sub: report.futureIncome > 0 ? `+ ${formatCurrency(report.futureIncome)} futuras` : '', color: 'text-tertiary', bg: 'bg-tertiary/5 border-tertiary/20' },
+              { label: 'Despesa Total (Atual)', value: formatCurrency(report.totalExpenses), sub: report.futureExpenses > 0 ? `+ ${formatCurrency(report.futureExpenses)} futuras` : '', color: 'text-error', bg: 'bg-error/5 border-error/20' },
+              { label: 'Lucro Líquido (Atual)', value: formatCurrency(report.netProfit), sub: '', color: report.netProfit >= 0 ? 'text-primary' : 'text-error', bg: 'bg-primary/5 border-primary/20' },
+              { label: 'ROI do Ano', value: `${report.roi.toFixed(1)}%`, sub: '', color: 'text-primary', bg: 'bg-primary-container text-on-primary-container' },
             ].map(c => (
-              <div key={c.label} className={`${c.bg} border rounded-xl p-md`}>
+              <div key={c.label} className={`${c.bg} border rounded-xl p-md flex flex-col justify-center`}>
                 <p className="text-label-md text-on-surface-variant mb-1">{c.label}</p>
                 <p className={`text-xl font-bold tnum ${c.color}`}>{c.value}</p>
+                {c.sub && <p className="text-[10px] font-bold text-on-surface-variant mt-1">{c.sub}</p>}
               </div>
             ))}
           </div>
