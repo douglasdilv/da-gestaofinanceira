@@ -84,9 +84,9 @@ export function SummaryCards({ income, expenses, balance, roi, mode, annualIncom
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               <span className="text-[10px] text-on-surface-variant/80 font-medium">Entradas brutas</span>
             </div>
-            {isBusiness && annualIncome !== undefined && (
+            {isBusiness && (
               <span className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 font-medium whitespace-nowrap">
-                Faturamento Anual: <span className="font-bold">{formatCurrency(annualIncome)}</span>
+                Faturamento Anual: <span className="font-bold">{annualIncome !== undefined ? formatCurrency(annualIncome) : 'Carregando...'}</span>
               </span>
             )}
           </div>
