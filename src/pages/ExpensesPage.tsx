@@ -272,7 +272,7 @@ export default function ExpensesPage() {
   return (
     <div className="py-lg space-y-lg">
       <ModeToggle />
-      <input ref={fileInputRef} type="file" className="hidden" onChange={handleAttachFile} accept="image/*,application/pdf" />
+      <input ref={fileInputRef} type="file" className="hidden" onChange={handleAttachFile} accept="image/*,application/pdf" capture="environment" />
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -433,6 +433,7 @@ export default function ExpensesPage() {
                   ref={formFileInputRef}
                   type="file"
                   accept="image/*,application/pdf"
+                  capture="environment"
                   onChange={handleFormPhotoSelect}
                   className="hidden"
                 />

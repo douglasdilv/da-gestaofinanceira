@@ -20,6 +20,18 @@ export function useCategories(userId: string | undefined, type?: 'income' | 'exp
         await seedDefaultCategories(userId)
         const retry = await q.order('name')
         data = retry.data
+      } else if (type === 'expense' && data && !data.find(c => c.name === 'Cartão de Crédito')) {
+        // Auto-inject missing Cartão de Crédito category for existing users
+        await supabase.from('categories').insert({
+          user_id: userId,
+          name: 'Cartão de Crédito',
+          type: 'expense',
+          mode: mode || 'personal',
+          icon: 'credit_card',
+          color: mode === 'business' ? '#6366f1' : '#10b981'
+        })
+        const retry = await q.order('name')
+        data = retry.data
       }
       
       return data as Category[]
@@ -57,6 +69,7 @@ export async function seedDefaultCategories(userId: string) {
     { name: 'Educação', icon: 'school', color: '#8b5cf6' },
     { name: 'Lazer', icon: 'sports_esports', color: '#ec4899' },
     { name: 'Vestuário', icon: 'checkroom', color: '#6366f1' },
+    { name: 'Cartão de Crédito', icon: 'credit_card', color: '#10b981' },
     { name: 'Outros', icon: 'more_horiz', color: '#6b7280' },
   ]
   const bizIncomeCategories = [
@@ -74,6 +87,7 @@ export async function seedDefaultCategories(userId: string) {
     { name: 'Pessoal', icon: 'people', color: '#3b82f6' },
     { name: 'Infraestrutura', icon: 'business', color: '#10b981' },
     { name: 'Impostos', icon: 'account_balance', color: '#ec4899' },
+    { name: 'Cartão de Crédito', icon: 'credit_card', color: '#6366f1' },
     { name: 'Outros', icon: 'more_horiz', color: '#6b7280' },
   ]
 

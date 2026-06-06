@@ -224,7 +224,7 @@ export default function IncomesPage() {
   return (
     <div className="py-lg space-y-lg">
       <ModeToggle />
-      <input ref={fileInputRef} type="file" className="hidden" onChange={handleAttachFile} accept="image/*" />
+      <input ref={fileInputRef} type="file" className="hidden" onChange={handleAttachFile} accept="image/*" capture="environment" />
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -375,6 +375,7 @@ export default function IncomesPage() {
                     ref={formFileInputRef}
                     type="file"
                     accept="image/*"
+                    capture="environment"
                     onChange={handleFormPhotoSelect}
                     className="hidden"
                   />

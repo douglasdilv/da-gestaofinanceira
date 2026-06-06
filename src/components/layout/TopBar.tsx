@@ -27,11 +27,11 @@ export function TopBar() {
             <img
               src="/logoapp.png"
               alt="D&A"
-              className="w-8 h-8 object-contain"
+              className="w-8 h-8 object-contain grayscale brightness-0 dark:invert"
               onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
             />
           </Link>
-          <h1 className="text-base font-bold text-primary hidden sm:block">D&A Gestão Financeira</h1>
+          <h1 className="text-base font-bold text-on-surface hidden sm:block">D&A Gestão Financeira</h1>
         </div>
 
         {/* Center: Mode toggle (desktop) + Date nav */}

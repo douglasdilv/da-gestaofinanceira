@@ -11,6 +11,7 @@ import { GoalCard } from '@/components/dashboard/GoalCard'
 import { RecentActivity } from '@/components/dashboard/RecentActivity'
 import { ModeToggle } from '@/components/shared/ModeToggle'
 import { Link } from 'react-router-dom'
+import { useAnnualReport } from '@/hooks/useReports'
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -21,6 +22,7 @@ export default function DashboardPage() {
   const { data: incomes = [], totalIncome } = useIncomes({ userId: user?.id || '', mode, year, month })
   const { data: expenses = [], totalExpenses } = useExpenses({ userId: user?.id || '', mode, year, month })
   const { data: goals = [] } = useGoals(user?.id, mode)
+  const { data: annualReport } = useAnnualReport(user?.id, year, mode)
 
   const netBalance = totalIncome - totalExpenses
   const roi = calculateROI(totalIncome, totalExpenses)
@@ -56,12 +58,6 @@ export default function DashboardPage() {
     }
   })
 
-  // Calculate sales for business mode
-  const salesCount = mode === 'business' ? incomes.filter(i => {
-    const cat = (i.category as { name: string } | null)?.name?.toLowerCase() || '';
-    return cat.includes('venda') || cat.includes('produto') || cat.includes('serviço') || cat.includes('marketplace') || i.is_ifood;
-  }).length : 0;
-
   return (
     <div className="py-lg space-y-lg">
       {/* Mode toggle - mobile */}
@@ -92,7 +88,7 @@ export default function DashboardPage() {
         balance={netBalance}
         roi={roi}
         mode={mode}
-        salesCount={salesCount}
+        annualIncome={annualReport?.totalIncome}
       />
 
       {/* Charts grid */}

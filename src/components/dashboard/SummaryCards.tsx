@@ -8,10 +8,10 @@ interface Props {
   balance: number
   roi: number
   mode: AppMode
-  salesCount?: number
+  annualIncome?: number
 }
 
-export function SummaryCards({ income, expenses, balance, roi, mode, salesCount = 0 }: Props) {
+export function SummaryCards({ income, expenses, balance, roi, mode, annualIncome }: Props) {
   const isBusiness = mode === 'business'
 
   return (
@@ -79,9 +79,16 @@ export function SummaryCards({ income, expenses, balance, roi, mode, salesCount 
           <p className="text-xl md:text-2xl font-black tnum tracking-tight text-emerald-600 dark:text-emerald-400">
             {formatCurrency(income)}
           </p>
-          <div className="flex items-center gap-1.5 mt-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <span className="text-[10px] text-on-surface-variant/80 font-medium">Entradas brutas</span>
+          <div className="flex items-center justify-between gap-1.5 mt-1">
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span className="text-[10px] text-on-surface-variant/80 font-medium">Entradas brutas</span>
+            </div>
+            {isBusiness && annualIncome !== undefined && (
+              <span className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 font-medium whitespace-nowrap">
+                Faturamento Anual: <span className="font-bold">{formatCurrency(annualIncome)}</span>
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -136,16 +143,11 @@ export function SummaryCards({ income, expenses, balance, roi, mode, salesCount 
           <div className="mt-4 z-10 flex items-end justify-between">
             <div>
               <p className="text-xl md:text-2xl font-black tnum tracking-tight text-black">
-                {salesCount}
+                {roi >= 0 ? '+' : ''}{roi.toFixed(1)}%
               </p>
               <div className="flex items-center gap-1 mt-1 text-black/70">
-                <span className="text-[10px] font-bold tracking-tight">Produtos / Serviços</span>
+                <span className="text-[10px] font-bold tracking-tight">Crescimento Mensal</span>
               </div>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-black tnum tracking-tight text-black/80">
-                ROI: {roi >= 0 ? '+' : ''}{roi.toFixed(1)}%
-              </p>
             </div>
           </div>
         </div>
