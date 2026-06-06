@@ -20,6 +20,8 @@ const schema = z.object({
   category_id: z.string().optional().or(z.literal('')),
   observation: z.string().optional(),
   is_ifood: z.boolean().default(false),
+  is_recurring: z.boolean().default(false),
+  recurring_months: z.coerce.number().min(2, 'Mínimo de 2 meses').optional().or(z.literal('')),
 })
 
 type FormData = z.infer<typeof schema>
@@ -101,10 +103,11 @@ export default function IncomesPage() {
 
   const { register, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { date: new Date().toISOString().split('T')[0], is_ifood: false },
+    defaultValues: { date: new Date().toISOString().split('T')[0], is_ifood: false, is_recurring: false },
   })
 
   const isIfood = watch('is_ifood')
+  const isRecurring = watch('is_recurring')
 
   const openForm = (item?: Income) => {
     setSelectedPhoto(null)
@@ -118,10 +121,12 @@ export default function IncomesPage() {
         category_id: item.category_id || '',
         observation: item.observation || '',
         is_ifood: item.is_ifood,
+        is_recurring: false,
+        recurring_months: ''
       })
     } else {
       setEditItem(null)
-      reset({ date: new Date().toISOString().split('T')[0], is_ifood: false })
+      reset({ date: new Date().toISOString().split('T')[0], is_ifood: false, is_recurring: false, recurring_months: '' })
     }
     setShowForm(true)
   }
@@ -142,9 +147,40 @@ export default function IncomesPage() {
         incomeId = editItem.id
         toast.success('Receita atualizada!')
       } else {
-        const created = await createMutation.mutateAsync({ ...data, user_id: user.id, mode, company_id: null, category_id: data.category_id || null, observation: data.observation || null, is_ifood: data.is_ifood })
-        incomeId = created.id
-        toast.success('Receita adicionada!')
+        if (data.is_recurring && data.recurring_months && Number(data.recurring_months) > 1) {
+          const qty = Number(data.recurring_months)
+          const [yearStr, monthStr, dayStr] = data.date.split('-')
+          const baseYear = parseInt(yearStr, 10)
+          const baseMonth = parseInt(monthStr, 10)
+          const day = parseInt(dayStr, 10)
+
+          toast.loading(`Gerando receita para ${qty} meses...`)
+          let firstIncomeId = ''
+          
+          for (let i = 0; i < qty; i++) {
+            const nextMonth = baseMonth + i
+            const nextYear = baseYear + Math.floor((nextMonth - 1) / 12)
+            const normalizedMonth = ((nextMonth - 1) % 12) + 1
+            const formattedDate = `${nextYear}-${String(normalizedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+
+            const created = await createMutation.mutateAsync({
+              ...data,
+              date: formattedDate,
+              user_id: user.id, mode, company_id: null,
+              category_id: data.category_id || null,
+              observation: data.observation || null,
+              is_ifood: data.is_ifood
+            })
+            if (i === 0) firstIncomeId = created.id
+          }
+          toast.dismiss()
+          incomeId = firstIncomeId
+          toast.success('Receitas recorrentes adicionadas com sucesso!')
+        } else {
+          const created = await createMutation.mutateAsync({ ...data, user_id: user.id, mode, company_id: null, category_id: data.category_id || null, observation: data.observation || null, is_ifood: data.is_ifood })
+          incomeId = created.id
+          toast.success('Receita adicionada!')
+        }
       }
 
       // If a photo was selected in the form, compress and upload it
@@ -363,6 +399,29 @@ export default function IncomesPage() {
                     <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${isIfood ? 'left-5' : 'left-0.5'}`} />
                   </button>
                 </div>
+
+                {!editItem && mode === 'personal' && (
+                  <>
+                    <div className="col-span-2 flex items-center justify-between p-3 bg-surface-container-low rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-lg text-primary">event_repeat</span>
+                        <span className="text-body-sm font-semibold">Receita Recorrente (Ex: Salário Mensal)</span>
+                      </div>
+                      <button type="button" onClick={() => setValue('is_recurring', !isRecurring)}
+                        className={`w-11 h-6 rounded-full transition-all relative ${isRecurring ? 'bg-primary' : 'bg-surface-container-highest'}`}>
+                        <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${isRecurring ? 'left-5' : 'left-0.5'}`} />
+                      </button>
+                    </div>
+                    {isRecurring && (
+                      <div className="col-span-2 space-y-xs">
+                        <label className="text-label-md font-label-md text-on-surface-variant">Por quantos meses quer prever essa receita? *</label>
+                        <input {...register('recurring_months')} type="number" min="2" placeholder="Ex: 12" className="w-full bg-transparent border-b border-outline-variant py-sm text-body-lg focus:outline-none focus:border-primary transition-colors" />
+                        {errors.recurring_months && <p className="text-xs text-error">{errors.recurring_months.message}</p>}
+                      </div>
+                    )}
+                  </>
+                )}
+
                 <div className="col-span-2 space-y-xs">
                   <label className="text-label-md font-label-md text-on-surface-variant">Observação</label>
                   <textarea {...register('observation')} rows={2} placeholder="Opcional..." className="w-full bg-transparent border border-outline-variant rounded-lg p-sm text-body-lg focus:outline-none focus:border-primary transition-colors resize-none" />

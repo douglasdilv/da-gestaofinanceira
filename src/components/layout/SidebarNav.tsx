@@ -14,7 +14,7 @@ export function SidebarNav() {
   return (
     <aside className="hidden md:flex flex-col w-64 bg-surface border-l border-outline-variant h-screen sticky top-0">
       <div className="p-4 flex items-center justify-center border-b border-outline-variant/50">
-        <img src="/logoapp.png" alt="Logo" className="w-10 h-10 object-contain mr-2 grayscale brightness-0 dark:invert" />
+        <img src="/logoapp.png" alt="Logo" className="w-10 h-10 object-contain mr-2" />
         <h1 className="font-headline-sm text-on-surface font-bold">D&A Finance</h1>
       </div>
       <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
