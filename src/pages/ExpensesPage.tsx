@@ -21,7 +21,7 @@ const schema = z.object({
   description: z.string().optional(),
   observation: z.string().optional(),
   is_installment: z.boolean().default(false),
-  installments: z.coerce.number().min(2, 'Mínimo de 2 parcelas').optional().or(z.literal('')),
+  installments: z.string().optional().or(z.literal('')),
 })
 
 type FormData = z.infer<typeof schema>

@@ -21,7 +21,7 @@ const schema = z.object({
   observation: z.string().optional(),
   is_ifood: z.boolean().default(false),
   is_recurring: z.boolean().default(false),
-  recurring_months: z.coerce.number().min(2, 'Mínimo de 2 meses').optional().or(z.literal('')),
+  recurring_months: z.string().optional().or(z.literal('')),
 })
 
 type FormData = z.infer<typeof schema>
