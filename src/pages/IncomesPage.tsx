@@ -80,7 +80,7 @@ const compressImage = (file: File): Promise<File> => {
 
 export default function IncomesPage() {
   const { user } = useAuth()
-  const { mode, currentDate } = useAppStore()
+  const { mode, currentDate, activeCompanyId } = useAppStore()
   const location = useLocation()
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth() + 1
@@ -97,7 +97,7 @@ export default function IncomesPage() {
   const formFileInputRef = useRef<HTMLInputElement>(null)
 
   const { data: incomes = [], totalIncome, createMutation, updateMutation, deleteMutation, uploadAttachment } = useIncomes({
-    userId: user?.id || '', mode, year, month
+    userId: user?.id || '', mode, year, month, companyId: activeCompanyId
   })
   const { data: categories = [] } = useCategories(user?.id, 'income', mode)
 
@@ -145,7 +145,7 @@ export default function IncomesPage() {
       const { is_recurring, recurring_months, ...incomeData } = data
       
       if (editItem) {
-        await updateMutation.mutateAsync({ id: editItem.id, ...incomeData, user_id: user.id, mode })
+        await updateMutation.mutateAsync({ id: editItem.id, ...incomeData, user_id: user.id, mode, company_id: mode === 'business' ? activeCompanyId : null })
         incomeId = editItem.id
         toast.success('Receita atualizada!')
       } else {
@@ -168,7 +168,7 @@ export default function IncomesPage() {
             const created = await createMutation.mutateAsync({
               ...incomeData,
               date: formattedDate,
-              user_id: user.id, mode, company_id: null,
+              user_id: user.id, mode, company_id: mode === 'business' ? activeCompanyId : null,
               category_id: incomeData.category_id || null,
               observation: incomeData.observation || null,
               is_ifood: incomeData.is_ifood
@@ -179,7 +179,7 @@ export default function IncomesPage() {
           incomeId = firstIncomeId
           toast.success('Receitas recorrentes adicionadas com sucesso!')
         } else {
-          const created = await createMutation.mutateAsync({ ...incomeData, user_id: user.id, mode, company_id: null, category_id: incomeData.category_id || null, observation: incomeData.observation || null, is_ifood: incomeData.is_ifood })
+          const created = await createMutation.mutateAsync({ ...incomeData, user_id: user.id, mode, company_id: mode === 'business' ? activeCompanyId : null, category_id: incomeData.category_id || null, observation: incomeData.observation || null, is_ifood: incomeData.is_ifood })
           incomeId = created.id
           toast.success('Receita adicionada!')
         }

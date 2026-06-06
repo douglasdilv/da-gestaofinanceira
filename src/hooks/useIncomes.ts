@@ -8,17 +8,18 @@ interface IncomeFilters {
   mode: AppMode
   year: number
   month: number
+  companyId?: string | null
 }
 
-export function useIncomes({ userId, mode, year, month }: IncomeFilters) {
+  export function useIncomes({ userId, mode, year, month, companyId }: IncomeFilters) {
   const qc = useQueryClient()
   const startDate = format(new Date(year, month - 1, 1), 'yyyy-MM-dd')
   const endDate = format(new Date(year, month, 0), 'yyyy-MM-dd')
 
   const query = useQuery({
-    queryKey: ['incomes', userId, mode, year, month],
+    queryKey: ['incomes', userId, mode, year, month, companyId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from('incomes')
         .select('*, category:categories(*), attachments(*)')
         .eq('user_id', userId)
@@ -26,10 +27,23 @@ export function useIncomes({ userId, mode, year, month }: IncomeFilters) {
         .gte('date', startDate)
         .lte('date', endDate)
         .order('date', { ascending: false })
+      
+      if (mode === 'business') {
+        if (companyId) {
+          q = q.eq('company_id', companyId)
+        } else {
+          // If in business mode but no company selected, return empty or handle?
+          // We will filter by companyId if provided. If not provided, maybe we should return empty.
+          // To be safe, we just filter by company_id if provided.
+          q = q.is('company_id', null) // Wait, if companyId is null we shouldn't fetch everything. We want it isolated.
+        }
+      }
+
+      const { data, error } = await q
       if (error) throw error
       return data as Income[]
     },
-    enabled: !!userId,
+    enabled: !!userId && (mode === 'personal' || (mode === 'business' && companyId !== undefined)),
   })
 
   const createMutation = useMutation({

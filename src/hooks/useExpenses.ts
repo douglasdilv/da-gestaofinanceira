@@ -8,17 +8,18 @@ interface ExpenseFilters {
   mode: AppMode
   year: number
   month: number
+  companyId?: string | null
 }
 
-export function useExpenses({ userId, mode, year, month }: ExpenseFilters) {
+export function useExpenses({ userId, mode, year, month, companyId }: ExpenseFilters) {
   const qc = useQueryClient()
   const startDate = format(new Date(year, month - 1, 1), 'yyyy-MM-dd')
   const endDate = format(new Date(year, month, 0), 'yyyy-MM-dd')
 
   const query = useQuery({
-    queryKey: ['expenses', userId, mode, year, month],
+    queryKey: ['expenses', userId, mode, year, month, companyId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from('expenses')
         .select('*, category:categories(*), attachments(*)')
         .eq('user_id', userId)
@@ -26,10 +27,20 @@ export function useExpenses({ userId, mode, year, month }: ExpenseFilters) {
         .gte('date', startDate)
         .lte('date', endDate)
         .order('date', { ascending: false })
+
+      if (mode === 'business') {
+        if (companyId) {
+          q = q.eq('company_id', companyId)
+        } else {
+          q = q.is('company_id', null)
+        }
+      }
+
+      const { data, error } = await q
       if (error) throw error
       return data as Expense[]
     },
-    enabled: !!userId,
+    enabled: !!userId && (mode === 'personal' || (mode === 'business' && companyId !== undefined)),
   })
 
   const createMutation = useMutation({

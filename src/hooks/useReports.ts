@@ -4,31 +4,42 @@ import type { AppMode, AnnualSummary, MonthlyReport } from '@/types'
 import { format } from 'date-fns'
 import { calculateROI, getMonthName } from '@/lib/utils'
 
-export function useAnnualReport(userId: string | undefined, year: number, mode: AppMode) {
+export function useAnnualReport(userId: string | undefined, year: number, mode: AppMode, companyId?: string | null) {
   return useQuery({
-    queryKey: ['annual-report', userId, year, mode],
+    queryKey: ['annual-report', userId, year, mode, companyId],
     queryFn: async (): Promise<AnnualSummary> => {
       if (!userId) throw new Error('No user')
       
       const startDate = `${year}-01-01`
       const endDate = `${year}-12-31`
 
-      const [incomesRes, expensesRes] = await Promise.all([
-        supabase
-          .from('incomes')
-          .select('*, category:categories(name)')
-          .eq('user_id', userId)
-          .eq('mode', mode)
-          .gte('date', startDate)
-          .lte('date', endDate),
-        supabase
-          .from('expenses')
-          .select('*, category:categories(name)')
-          .eq('user_id', userId)
-          .eq('mode', mode)
-          .gte('date', startDate)
-          .lte('date', endDate),
-      ])
+      let incQuery = supabase
+        .from('incomes')
+        .select('*, category:categories(name)')
+        .eq('user_id', userId)
+        .eq('mode', mode)
+        .gte('date', startDate)
+        .lte('date', endDate)
+
+      let expQuery = supabase
+        .from('expenses')
+        .select('*, category:categories(name)')
+        .eq('user_id', userId)
+        .eq('mode', mode)
+        .gte('date', startDate)
+        .lte('date', endDate)
+
+      if (mode === 'business') {
+        if (companyId) {
+          incQuery = incQuery.eq('company_id', companyId)
+          expQuery = expQuery.eq('company_id', companyId)
+        } else {
+          incQuery = incQuery.is('company_id', null)
+          expQuery = expQuery.is('company_id', null)
+        }
+      }
+
+      const [incomesRes, expensesRes] = await Promise.all([incQuery, expQuery])
 
       if (incomesRes.error) throw incomesRes.error
       if (expensesRes.error) throw expensesRes.error
@@ -122,6 +133,6 @@ export function useAnnualReport(userId: string | undefined, year: number, mode: 
         months,
       }
     },
-    enabled: !!userId,
+    enabled: !!userId && (mode === 'personal' || (mode === 'business' && companyId !== undefined)),
   })
 }

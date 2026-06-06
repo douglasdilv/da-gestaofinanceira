@@ -80,7 +80,7 @@ const compressImage = (file: File): Promise<File> => {
 
 export default function ExpensesPage() {
   const { user } = useAuth()
-  const { mode, currentDate } = useAppStore()
+  const { mode, currentDate, activeCompanyId } = useAppStore()
   const location = useLocation()
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth() + 1
@@ -97,7 +97,7 @@ export default function ExpensesPage() {
   const formFileInputRef = useRef<HTMLInputElement>(null)
 
   const { data: expenses = [], totalExpenses, createMutation, updateMutation, deleteMutation, uploadAttachment } = useExpenses({
-    userId: user?.id || '', mode, year, month
+    userId: user?.id || '', mode, year, month, companyId: activeCompanyId
   })
   const { data: categories = [] } = useCategories(user?.id, 'expense', mode)
 
@@ -135,7 +135,7 @@ export default function ExpensesPage() {
       const { is_installment, installments, ...expenseData } = data
       
       if (editItem) {
-        await updateMutation.mutateAsync({ id: editItem.id, ...expenseData, mode })
+        await updateMutation.mutateAsync({ id: editItem.id, ...expenseData, mode, company_id: mode === 'business' ? activeCompanyId : null })
         expenseId = editItem.id
         toast.success('Despesa atualizada!')
       } else {
@@ -159,7 +159,7 @@ export default function ExpensesPage() {
               ...expenseData,
               name: `${expenseData.name} (${i + 1}/${qty})`,
               date: formattedDate,
-              user_id: user.id, mode, company_id: null,
+              user_id: user.id, mode, company_id: mode === 'business' ? activeCompanyId : null,
               category_id: expenseData.category_id || null,
               description: expenseData.description || null,
               observation: expenseData.observation || null,
@@ -171,7 +171,7 @@ export default function ExpensesPage() {
           toast.success('Despesas parceladas adicionadas!')
         } else {
           const created = await createMutation.mutateAsync({
-            ...expenseData, user_id: user.id, mode, company_id: null,
+            ...expenseData, user_id: user.id, mode, company_id: mode === 'business' ? activeCompanyId : null,
             category_id: expenseData.category_id || null,
             description: expenseData.description || null,
             observation: expenseData.observation || null,

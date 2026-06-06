@@ -1,22 +1,31 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useProfile } from '@/hooks/useProfile'
+import { useCompanies } from '@/hooks/useCompanies'
 import { useAppStore } from '@/store/appStore'
 import { formatMonthYear } from '@/lib/utils'
-import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar, Building2 } from 'lucide-react'
 import { addMonths, subMonths } from 'date-fns'
+import { useEffect } from 'react'
 
 export function TopBar() {
   const { user } = useAuth()
   const { data: profile } = useProfile(user?.id)
-  const { mode, setMode, currentDate, setCurrentDate } = useAppStore()
+  const { data: companies } = useCompanies(user?.id)
+  const { mode, setMode, currentDate, setCurrentDate, activeCompanyId, setActiveCompanyId } = useAppStore()
   const location = useLocation()
 
-  const isDashboard = location.pathname === '/'
   const showDateNav = ['/', '/receitas', '/despesas'].includes(location.pathname)
 
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1))
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1))
+
+  // Auto-select first company if none selected
+  useEffect(() => {
+    if (mode === 'business' && !activeCompanyId && companies && companies.length > 0) {
+      setActiveCompanyId(companies[0].id)
+    }
+  }, [mode, activeCompanyId, companies, setActiveCompanyId])
 
   return (
     <header className="fixed top-0 w-full z-50 bg-surface border-b border-outline-variant h-16">
@@ -36,7 +45,6 @@ export function TopBar() {
 
         {/* Center: Mode toggle (desktop) + Date nav */}
         <div className="flex items-center gap-3">
-          {/* Mode toggle - desktop */}
           <div className="hidden md:flex bg-surface-container rounded-full p-1 border border-outline-variant">
             <button
               onClick={() => setMode('personal')}
@@ -51,6 +59,22 @@ export function TopBar() {
               Empresarial
             </button>
           </div>
+
+          {/* Company Selector (Business Mode) */}
+          {mode === 'business' && companies && companies.length > 0 && (
+            <div className="hidden sm:flex items-center gap-2 bg-surface-container-low rounded-lg px-2 py-1.5 border border-outline-variant">
+              <Building2 className="w-4 h-4 text-primary" />
+              <select
+                value={activeCompanyId || ''}
+                onChange={(e) => setActiveCompanyId(e.target.value)}
+                className="bg-transparent text-label-md font-label-md text-on-surface focus:outline-none cursor-pointer"
+              >
+                {companies.map(c => (
+                  <option key={c.id} value={c.id} className="bg-surface text-on-surface">{c.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Date navigation */}
           {showDateNav && (

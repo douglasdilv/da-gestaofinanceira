@@ -3,16 +3,21 @@ import { useAuth } from '@/hooks/useAuth'
 import { useProfile } from '@/hooks/useProfile'
 import { useAppStore } from '@/store/appStore'
 import { toast } from 'sonner'
-import { Camera, LogOut, Bell, Moon, Shield, FileDown, FileSpreadsheet, Building2, ChevronRight } from 'lucide-react'
+import { Camera, LogOut, Bell, Moon, Shield, FileDown, FileSpreadsheet, Building2, ChevronRight, Plus, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useNavigate } from 'react-router-dom'
+import { useCompanies } from '@/hooks/useCompanies'
+import * as Dialog from '@radix-ui/react-dialog'
 
 export default function ProfilePage() {
   const { user, signOut } = useAuth()
   const { data: profile, upsertMutation, uploadAvatar } = useProfile(user?.id)
   const { mode } = useAppStore()
+  const { data: companies, createMutation: createCompany, deleteMutation: deleteCompany } = useCompanies(user?.id)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
   const [darkMode, setDarkMode] = useState(false)
+  const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false)
+  const [newCompanyName, setNewCompanyName] = useState('')
   const avatarRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
 
@@ -38,10 +43,33 @@ export default function ProfilePage() {
     if (!user || !profile) return
     const newValue = !profile.has_company
     await upsertMutation.mutateAsync({ id: user.id, has_company: newValue })
-    if (newValue) {
+    if (newValue && (!companies || companies.length === 0)) {
       navigate('/onboarding')
-    } else {
+    } else if (!newValue) {
       toast.info('Modo empresarial desativado')
+    }
+  }
+
+  const handleCreateCompany = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newCompanyName.trim() || !user) return
+    try {
+      await createCompany.mutateAsync({ user_id: user.id, name: newCompanyName, cnpj: null, segment: null, city: null, state: null, opened_at: null })
+      toast.success('Empresa adicionada!')
+      setNewCompanyName('')
+      setIsCompanyModalOpen(false)
+    } catch {
+      toast.error('Erro ao adicionar empresa')
+    }
+  }
+
+  const handleDeleteCompany = async (companyId: string) => {
+    if (!confirm('Excluir empresa? Essa ação apagará também todas as receitas e despesas vinculadas a ela!')) return
+    try {
+      await deleteCompany.mutateAsync(companyId)
+      toast.success('Empresa excluída')
+    } catch {
+      toast.error('Erro ao excluir empresa')
     }
   }
 
@@ -124,6 +152,69 @@ export default function ProfilePage() {
           <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-all duration-300 ${profile?.has_company ? 'left-6' : 'left-0.5'}`} />
         </div>
       </button>
+
+      {/* List of Companies */}
+      {profile?.has_company && (
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden animate-fade-in">
+          <div className="flex items-center justify-between px-lg py-md border-b border-outline-variant">
+            <h4 className="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">Minhas Empresas</h4>
+            <Dialog.Root open={isCompanyModalOpen} onOpenChange={setIsCompanyModalOpen}>
+              <Dialog.Trigger asChild>
+                <button className="flex items-center gap-1 text-primary text-label-md font-label-md hover:bg-primary/10 px-2 py-1 rounded transition-colors">
+                  <Plus className="w-4 h-4" /> Nova
+                </button>
+              </Dialog.Trigger>
+              <Dialog.Portal>
+                <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50 animate-fade-in" />
+                <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-surface-container-lowest rounded-xl p-lg w-[90vw] max-w-md z-50 animate-scale-in">
+                  <Dialog.Title className="text-headline-sm font-headline-sm mb-4">Adicionar Empresa</Dialog.Title>
+                  <form onSubmit={handleCreateCompany} className="space-y-4">
+                    <div>
+                      <label className="text-label-md font-label-md text-on-surface-variant">Nome da Empresa</label>
+                      <input
+                        type="text"
+                        value={newCompanyName}
+                        onChange={(e) => setNewCompanyName(e.target.value)}
+                        className="w-full bg-transparent border-b border-outline-variant py-sm text-body-lg focus:outline-none focus:border-primary transition-colors"
+                        placeholder="Ex: Lanchonete, Loja Online..."
+                        autoFocus
+                        required
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2 pt-4">
+                      <Dialog.Close asChild>
+                        <button type="button" className="px-4 py-2 text-on-surface-variant hover:bg-surface-container rounded-lg">Cancelar</button>
+                      </Dialog.Close>
+                      <button type="submit" className="px-4 py-2 bg-primary text-on-primary rounded-lg hover:bg-primary-container disabled:opacity-50" disabled={!newCompanyName.trim()}>
+                        Salvar
+                      </button>
+                    </div>
+                  </form>
+                </Dialog.Content>
+              </Dialog.Portal>
+            </Dialog.Root>
+          </div>
+          <div className="divide-y divide-outline-variant">
+            {companies?.length === 0 ? (
+              <p className="px-lg py-md text-body-sm text-on-surface-variant text-center">Nenhuma empresa cadastrada.</p>
+            ) : (
+              companies?.map(company => (
+                <div key={company.id} className="flex items-center justify-between px-lg py-md hover:bg-surface-container/50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-surface-container-highest flex items-center justify-center">
+                      <Building2 className="w-4 h-4 text-on-surface" />
+                    </div>
+                    <p className="font-semibold text-on-surface">{company.name}</p>
+                  </div>
+                  <button onClick={() => handleDeleteCompany(company.id)} className="p-2 text-on-surface-variant hover:text-error hover:bg-error/10 rounded-full transition-colors" title="Excluir Empresa">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Export */}
       <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">

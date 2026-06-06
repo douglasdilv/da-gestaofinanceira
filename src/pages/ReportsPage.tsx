@@ -11,10 +11,10 @@ import { toast } from 'sonner'
 
 export default function ReportsPage() {
   const { user } = useAuth()
-  const { mode } = useAppStore()
+  const { mode, activeCompanyId } = useAppStore()
   const [year, setYear] = useState(new Date().getFullYear())
 
-  const { data: report, isLoading } = useAnnualReport(user?.id, year, mode)
+  const { data: report, isLoading } = useAnnualReport(user?.id, year, mode, activeCompanyId)
 
   const handleExportPDF = async () => {
     if (!report) return

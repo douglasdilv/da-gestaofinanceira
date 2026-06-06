@@ -15,14 +15,14 @@ import { useAnnualReport } from '@/hooks/useReports'
 
 export default function DashboardPage() {
   const { user } = useAuth()
-  const { mode, currentDate } = useAppStore()
+  const { mode, currentDate, activeCompanyId } = useAppStore()
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth() + 1
 
-  const { data: incomes = [], totalIncome } = useIncomes({ userId: user?.id || '', mode, year, month })
-  const { data: expenses = [], totalExpenses } = useExpenses({ userId: user?.id || '', mode, year, month })
+  const { data: incomes = [], totalIncome } = useIncomes({ userId: user?.id || '', mode, year, month, companyId: activeCompanyId })
+  const { data: expenses = [], totalExpenses } = useExpenses({ userId: user?.id || '', mode, year, month, companyId: activeCompanyId })
   const { data: goals = [] } = useGoals(user?.id, mode)
-  const { data: annualReport } = useAnnualReport(user?.id, year, mode)
+  const { data: annualReport } = useAnnualReport(user?.id, year, mode, activeCompanyId)
 
   const netBalance = totalIncome - totalExpenses
   const roi = calculateROI(totalIncome, totalExpenses)
